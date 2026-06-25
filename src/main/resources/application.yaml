@@ -1,0 +1,107 @@
+spring:
+  application:
+    name: ms-tickets
+
+  datasource:
+
+    driver-class-name: org.postgresql.Driver
+
+  r2dbc:
+    url: r2dbc:postgresql://${POSTGRES_HOST}:5432/${POSTGRES_DB}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+
+  liquibase:
+    url: jdbc:postgresql://${POSTGRES_HOST}:5432/${POSTGRES_DB}
+    user: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+    change-log: classpath:/db/changelog/db.changelog-master.sql
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      password: ${REDIS_PASSWORD}
+  rabbitmq:
+    host: ${RABBITMQ_HOST}
+    port: 5672
+    username: ${RABBITMQ_USER}
+    password: ${RABBITMQ_PASSWORD}
+    #    ssl:
+    #      enabled: true
+    #      key-store: classpath:client-keystore.p12
+    #      key-store-password: password
+    #      trust-store: classpath:truststore.jks
+    #      trust-store-password: password
+    listener:
+      simple:
+        retry:
+          enabled: true
+          initial-interval: 2000ms # Wait 2s before first retry
+          multiplier: 2.0 # Wait 2s, then 4s, then 8s
+          max-retries: 3
+        default-requeue-rejected: false # After 3 tries, send to DLX
+
+
+
+logging:
+  level:
+    root: info
+  pattern:
+    correlation: "[${spring.application.name:},%X{traceId:-},%X{spanId:-}]"
+
+
+management:
+  endpoints:
+    web:
+      base-path: "/"
+
+  opentelemetry:
+    logging:
+      export:
+        otlp:
+          endpoint: http://${LOKI_HOST}:4318/v1/logs
+  tracing:
+    sampling:
+      probability: 1.0
+
+tickets-rmq:
+  queueName: "payment-event-queue"
+  dlqName: "payment-event-queue-dlq"
+  exchangeName: "payment-events"
+  dlqExchangeName: "payment-events.dlx"
+  routingKey: "payment.notifications.*"
+  queueTtl: 60000
+  dlq-routing-key: "deadLetter"
+
+
+
+notifications-rmq:
+  queueName: "notification-request-queue"
+  dlqName: "notification-request-queue-dlq"
+  exchangeName: "notification-events"
+  dlqExchangeName: "notification-events.dlx"
+  routingKey: "system.notifications.*"
+  queueTtl: 60000
+  dlq-routing-key: "deadLetter"
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      externalApiCB:
+        registerHealthIndicator: true
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        slidingWindowSize: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+  retry:
+    instances:
+      externalApiRetry:
+        maxAttempts: 3
+        waitDuration: 2s
+  timelimiter:
+    instances:
+      externalApiTimeout:
+        timeoutDuration: 4s
+
+server:
+  port: 8081
