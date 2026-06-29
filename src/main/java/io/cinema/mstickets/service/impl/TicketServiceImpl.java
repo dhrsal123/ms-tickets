@@ -103,9 +103,11 @@ public class TicketServiceImpl implements TicketService {
         return Mono.defer(() -> {
             try {
                 var properties = rabbitProperties.getNotificationProperties();
+                // TODO: FETCH FROM THE BOOKING SERVICE THE PRODUCT NAME
                 var templateVariables = Map.<String, Object>of(
                         "paymentId", paymentDTO.paymentId(),
-                        "date", paymentDTO.date(),
+                        "paymentDate", paymentDTO.date(),
+                        "productName", "TEMPORARY TEST",
                         "amount", paymentDTO.amount(),
                         "currencyType", paymentDTO.currency(),
                         "status", paymentDTO.status(),
