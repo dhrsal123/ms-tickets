@@ -88,19 +88,19 @@ server:
 
 tickets:
   rabbitmq:
-    payment-queue:
-      queueName: "payment-event-queue"
-      dlqName: "payment-event-queue-dlq"
-      exchangeName: "payment-events"
-      dlqExchangeName: "payment-events.dlx"
-      routingKey: "payment.notifications.*"
-      queueTtl: 60000
-      dlq-routing-key: "deadLetter"
-    notification-queue:
+    notification-properties:
       queueName: "notification-request-queue"
       dlqName: "notification-request-queue-dlq"
       exchangeName: "notification-events"
       dlqExchangeName: "notification-events.dlx"
       routingKey: "system.notifications.*"
+      queueTtl: 60000
+      dlq-routing-key: "deadLetter"
+    payment-properties:
+      queueName: "payment-event-queue"
+      dlqName: "payment-event-queue-dlq"
+      exchangeName: "payment-events"
+      dlqExchangeName: "payment-events.dlx"
+      routingKey: "payment.notifications.*"
       queueTtl: 60000
       dlq-routing-key: "deadLetter"
