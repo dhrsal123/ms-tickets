@@ -1,0 +1,48 @@
+<configuration>
+    <import class="ch.qos.logback.classic.encoder.PatternLayoutEncoder"/>
+    <import class="ch.qos.logback.core.ConsoleAppender"/>
+    <import class="com.github.loki4j.logback.Loki4jAppender"/>
+    <import class="com.github.loki4j.logback.JsonLayout"/>
+
+    <springProperty scope="context" name="appName" source="spring.application.name"/>
+    <appender name="STDOUT" class="ConsoleAppender">
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <layout class="com.github.loki4j.logback.JsonLayout">
+                <json>
+                    <timestamp name="ts" pattern="yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"/>
+                    <level name="level"/>
+                    <logger name="logger"/>
+                    <thread name="thread"/>
+                    <message name="msg"/>
+                    <stackTrace name="stack"/>
+                </json>
+            </layout>
+        </encoder>
+    </appender>
+
+    <appender name="LOKI" class="com.github.loki4j.logback.Loki4jAppender">
+        <http>
+            <url>http://localhost:3100/loki/api/v1/push</url>
+        </http>
+        <format>
+            <label>
+                <pattern>app=${appName},host=${HOSTNAME},level=%level</pattern>
+            </label>
+            <message class="com.github.loki4j.logback.JsonLayout">
+                <json>
+                    <timestamp name="ts" pattern="yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"/>
+                    <level name="level"/>
+                    <logger name="logger"/>
+                    <thread name="thread"/>
+                    <message name="msg"/>
+                    <stackTrace name="stack"/>
+                </json>
+            </message>
+        </format>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="LOKI"/>
+    </root>
+</configuration>
