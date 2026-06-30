@@ -71,7 +71,7 @@ public class TicketServiceImpl implements TicketService {
         return idempotencyRepository.findById(paymentDTO.paymentId())
                 .flatMap(existingKey -> {
                     log.info("Payment {} already processed. Ignoring duplicate.", existingKey.getId());
-                    return Mono.empty();
+                    return Mono.just(existingKey);
                 })
                 .switchIfEmpty(Mono.defer(() -> {
                     var ticketEntity = ticketMapper.toTicketEntity(paymentDTO);
@@ -83,9 +83,11 @@ public class TicketServiceImpl implements TicketService {
                     idempotencyKey.setNew(true);
 
                     return ticketRepository.save(ticketEntity)
-                            .then(idempotencyRepository.save(idempotencyKey));
+                            .then(idempotencyRepository.save(idempotencyKey))
+                            .flatMap(savedKey ->
+                                    sendNotificationIfNeeded(paymentDTO).thenReturn(savedKey)
+                            );
                 }))
-                .then(Mono.defer(() -> sendNotificationIfNeeded(paymentDTO)))
                 .as(transactionalOperator::transactional)
                 .doOnError(e -> log.error("DB error during ticket processing: {}", e.getMessage()))
                 .onErrorMap(
