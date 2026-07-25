@@ -1,6 +1,7 @@
 package io.cinema.mstickets;
 
 import io.cinema.config.AuditingConfig;
+import io.cinema.config.RabbitConfig;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
@@ -8,7 +9,7 @@ import org.springframework.context.annotation.Import;
 
 @SpringBootApplication
 @ComponentScan(basePackages = "io.cinema")
-@Import({AuditingConfig.class})
+@Import({AuditingConfig.class, RabbitConfig.class})
 public class MsTicketsApplication {
 
     public static void main(String[] args) {
