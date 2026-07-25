@@ -97,10 +97,9 @@ tickets:
       queueTtl: 60000
       dlq-routing-key: "deadLetter"
     payment-properties:
-      queueName: "payment-event-queue"
-      dlqName: "payment-event-queue-dlq"
-      exchangeName: "payment-events"
-      dlqExchangeName: "payment-events.dlx"
-      routingKey: "payment.notifications.*"
+      queueName: "ticket-event-queue"
+      dlqName: "ticket-event-queue-dlq"
+      exchangeName: "payment-success-exchange"
+      dlqExchangeName: "payment-success-exchange.dlx"
       queueTtl: 60000
       dlq-routing-key: "deadLetter"

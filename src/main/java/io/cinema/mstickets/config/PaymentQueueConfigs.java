@@ -4,9 +4,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.DirectExchange;
+import org.springframework.amqp.core.FanoutExchange;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.QueueBuilder;
-import org.springframework.amqp.core.TopicExchange;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -16,13 +16,13 @@ public class PaymentQueueConfigs {
     private final RabbitMQProperties rabbitMQProperties;
 
     @Bean
-    public TopicExchange paymentTopicExchange() {
+    public FanoutExchange paymentSuccessExchange() {
         var properties = rabbitMQProperties.getPaymentProperties();
-        return new TopicExchange(properties.getExchangeName());
+        return new FanoutExchange(properties.getExchangeName());
     }
 
     @Bean
-    public Queue paymentQueue() {
+    public Queue ticketEventQueue() {
         var properties = rabbitMQProperties.getPaymentProperties();
         return QueueBuilder.durable(properties.getQueueName())
                 .ttl(properties.getQueueTtl())
@@ -32,32 +32,30 @@ public class PaymentQueueConfigs {
     }
 
     @Bean
-    public Binding paymentBinding(TopicExchange paymentTopicExchange, Queue paymentQueue) {
-        var properties = rabbitMQProperties.getPaymentProperties();
+    public Binding ticketEventBinding(FanoutExchange paymentSuccessExchange, Queue ticketEventQueue) {
         return BindingBuilder
-                .bind(paymentQueue)
-                .to(paymentTopicExchange)
-                .with(properties.getRoutingKey());
+                .bind(ticketEventQueue)
+                .to(paymentSuccessExchange);
     }
 
     @Bean
-    public DirectExchange paymentDlqExchange() {
+    public DirectExchange ticketDlqExchange() {
         var properties = rabbitMQProperties.getPaymentProperties();
         return new DirectExchange(properties.getDlqExchangeName());
     }
 
     @Bean
-    public Queue paymentDeadLettersQueue() {
+    public Queue ticketDeadLettersQueue() {
         var properties = rabbitMQProperties.getPaymentProperties();
         return new Queue(properties.getDlqName());
     }
 
     @Bean
-    public Binding paymentDeadLettersBinding(DirectExchange paymentDlqExchange, Queue paymentDeadLettersQueue) {
+    public Binding ticketDeadLettersBinding(DirectExchange ticketDlqExchange, Queue ticketDeadLettersQueue) {
         var properties = rabbitMQProperties.getPaymentProperties();
         return BindingBuilder
-                .bind(paymentDeadLettersQueue)
-                .to(paymentDlqExchange)
+                .bind(ticketDeadLettersQueue)
+                .to(ticketDlqExchange)
                 .with(properties.getDlqRoutingKey());
     }
 }
